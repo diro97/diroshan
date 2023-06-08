@@ -1,0 +1,54 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '2.7.10'
+    id 'io.spring.dependency-management' version '1.1.0'
+    id "com.ewerk.gradle.plugins.querydsl" version "1.0.10"
+}
+
+group = 'com.defect.tracker'
+version = '0.0.1-SNAPSHOT'
+sourceCompatibility = '11'
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	runtimeOnly 'org.postgresql:postgresql'
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+    implementation group: 'com.querydsl', name: 'querydsl-apt',version: '5.0.0'
+    implementation group: 'com.querydsl', name: 'querydsl-jpa',version: '5.0.0'
+}
+
+
+sourceSets {
+    main {
+        java {
+            srcDir 'src/main/java'
+        }
+    }
+}
+
+def generatedSrcDir = 'gradle/generated'
+
+querydsl {
+    jpa = true
+    querydslSourcesDir = generatedSrcDir
+}
+
+compileQuerydsl {
+    options.annotationProcessorPath = configurations.querydsl
+    source = sourceSets.main.java
+    options.compilerArgs << '-proc:only' << "-processor" << "com.querydsl.apt.jpa.JPAAnnotationProcessor" << "-s" << file(generatedSrcDir).absolutePath
+}
+configurations {
+    querydsl.extendsFrom compileClasspath
+}
+
+tasks.named('test') {
+	useJUnitPlatform()
+}
